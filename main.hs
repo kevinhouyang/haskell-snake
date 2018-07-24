@@ -43,9 +43,8 @@ drawSquare bottomLeft@(x, y) =
     in color white (polygon (map (\(x, y) -> (x * squareDim, y * squareDim)) [bottomLeft, topLeft, topRight, bottomRight]))
 
 drawSnake :: Snake -> [Picture]
-drawSnake snake | length snake == 1 = (drawSquare (head snake)) : []
-                | otherwise = (drawSquare (head snake)) : (drawSnake (tail snake))
-
+drawSnake [] = []
+drawSnake snake@(x:xs) = drawSquare x : drawSnake xs
 
 -- functions for handling game logic --
 
