@@ -3,72 +3,75 @@ module Main where
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game as Game
 
+
+-- type/data declarations and constants --
+
 type Snake = Path
 type GameState = (Snake, Point, Int, Direction)
 
--- type Direction :: (Enum a) => a
--- type Direction = NORTH | SOUTH | EAST | WEST
-
 data Direction = NORTH | SOUTH | EAST | WEST deriving (Enum, Eq)
 
--- Instantiate Initial Variables
+newSnake :: Snake
+newSnake = [(0, 0), (1, 0), (2, 0)]
 
 squareDim :: Float
 squareDim = 30
 
+windowDim :: Int
+windowDim = 500
+
+
+-- functions for setting the game window --
+
 window :: Display
-window = InWindow "Snake" (500, 500) (100, 100)
+window = InWindow "Snake" (windowDim, windowDim) (100, 100)
 
 background :: Color
 background = black
 
--- drawing :: Picture
--- drawing = blank
 
-
--- convertWorld :: Path -> Picture
--- convertWorld x = line x
-
-handleKeyEvent :: Game.Event -> GameState -> GameState
-handleKeyEvent (EventKey k ks _ _) (snake, point, int, direction) = (snake, point, int, newDirection)
-	where newDirection | SpecialKey KeyUp <- k, Down <- ks = NORTH | SpecialKey KeyDown <- k, Down <- ks = SOUTH | SpecialKey KeyRight <- k, Down <- ks = EAST | SpecialKey KeyLeft <- k, Down <- ks = WEST | otherwise = direction
-handleKeyEvent _ game = game
-
-
-updateGame :: Float -> GameState -> GameState
-updateGame _ (snake, apple, score, direction) =
-    let newSnake = updateSnake snake direction
-    in (newSnake, apple, score, direction)
-    -- let newSnake = map (\(x,y) -> (x+40, y)) snake
-
-updateSnake :: Path -> Direction -> Path
-updateSnake snake direction = (deltaX + fst (head snake), deltaY + snd (head snake)): init snake
-    where (deltaX, deltaY) | direction == NORTH = (0, 40) | direction == SOUTH = (0, -40) | direction == WEST = (-40, 0) | direction == EAST = (40, 0)
-
--- Initial Functions
-
-drawSquare :: Point -> Picture
-drawSquare bottomLeft@(x, y) =
-    let topLeft = (x + squareDim, y)
-        topRight = (x + squareDim, y - squareDim)
-        bottomRight = (x, y - squareDim)
-    in color white (polygon [bottomLeft, topLeft, topRight, bottomRight])
-
-drawSnake :: Path -> [Picture]
-drawSnake snake | length snake == 1 = (drawSquare (head snake)) : []
-                | otherwise = (drawSquare (head snake)) : (drawSnake (tail snake))
-
-point :: Point
-point = (50,50)
-
--- square :: Picture
--- square = drawSquare point
-
-newSnake :: Path
-newSnake = [(0, 0), (40, 0), (80, 0)]
+-- functions for rendering the picture --
 
 drawPicture :: GameState -> Picture
 drawPicture (snake, _, _, _) = Pictures (drawSnake snake)
+
+drawSquare :: Point -> Picture
+drawSquare bottomLeft@(x, y) =
+    let topLeft = (x + 1, y)
+        topRight = (x + 1, y - 1)
+        bottomRight = (x, y - 1)
+    in color white (polygon (map (\(x, y) -> (x * squareDim, y * squareDim)) [bottomLeft, topLeft, topRight, bottomRight]))
+
+drawSnake :: Snake -> [Picture]
+drawSnake snake | length snake == 1 = (drawSquare (head snake)) : []
+                | otherwise = (drawSquare (head snake)) : (drawSnake (tail snake))
+
+
+-- functions for handling game logic --
+
+handleKeyEvent :: Game.Event -> GameState -> GameState
+handleKeyEvent (EventKey k ks _ _) (snake, point, int, direction)
+    | SpecialKey KeyUp <- k, Down <- ks = (snake, point, int, NORTH)
+    | SpecialKey KeyDown <- k, Down <- ks = (snake, point, int, SOUTH)
+    | SpecialKey KeyRight <- k, Down <- ks = (snake, point, int, EAST)
+    | SpecialKey KeyLeft <- k, Down <- ks = (snake, point, int, WEST)
+    | otherwise = (snake, point, int, direction)
+handleKeyEvent _ game = game
+
+updateGame :: Float -> GameState -> GameState
+updateGame _ (snake, apple, score, direction) = (newSnake, apple, score, direction)
+    where newSnake = updateSnake snake direction
+
+updateSnake :: Snake -> Direction -> Snake
+updateSnake snake direction
+    | direction == NORTH = (x, y + 1): init snake
+    | direction == SOUTH = (x, y - 1): init snake
+    | direction == WEST = (x - 1, y): init snake
+    | direction == EAST = (x + 1, y): init snake
+    where (x,y) = head snake
+
+
+-- run the game! --
 
 main :: IO ()
 main =
@@ -77,5 +80,3 @@ main =
     in play window background keyFrame newGame drawPicture handleKeyEvent updateGame
 
 -- display window background drawPicture
-
--- play window background 1 world convertWorld dummyUpdate updateWorld
