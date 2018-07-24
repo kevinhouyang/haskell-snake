@@ -30,7 +30,10 @@ background = black
 -- convertWorld x = line x
 
 handleKeyEvent :: Game.Event -> GameState -> GameState
-handleKeyEvent event game = game
+handleKeyEvent (EventKey k ks _ _) (snake, point, int, direction) = (snake, point, int, newDirection)
+	where newDirection | SpecialKey KeyUp <- k, Down <- ks = NORTH | SpecialKey KeyDown <- k, Down <- ks = SOUTH | SpecialKey KeyRight <- k, Down <- ks = EAST | SpecialKey KeyLeft <- k, Down <- ks = WEST | otherwise = direction
+handleKeyEvent _ game = game
+
 
 updateGame :: Float -> GameState -> GameState
 updateGame _ (snake, apple, score, direction) =
@@ -39,7 +42,7 @@ updateGame _ (snake, apple, score, direction) =
     -- let newSnake = map (\(x,y) -> (x+40, y)) snake
 
 updateSnake :: Path -> Direction -> Path
-updateSnake snake direction = map (\(x,y) -> (x+deltaX, y+deltaY)) snake
+updateSnake snake direction = (deltaX + fst (head snake), deltaY + snd (head snake)): init snake
     where (deltaX, deltaY) | direction == NORTH = (0, 40) | direction == SOUTH = (0, -40) | direction == WEST = (-40, 0) | direction == EAST = (40, 0)
 
 -- Initial Functions
@@ -70,7 +73,7 @@ drawPicture (snake, _, _, _) = Pictures (drawSnake snake)
 main :: IO ()
 main =
     let newGame = (newSnake, (200,200), 0, NORTH)
-        keyFrame = 1
+        keyFrame = 2
     in play window background keyFrame newGame drawPicture handleKeyEvent updateGame
 
 -- display window background drawPicture
