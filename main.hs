@@ -1,34 +1,62 @@
+module Main where
+
 import Graphics.Gloss
-import System.Random
 
-type Coords = (Int, Int)
-type Snake = [Coords]
-data Direction = NORTH | SOUTH | EAST | WEST
+import Graphics.Gloss.Interface.Pure.Game as Game
 
--- window display
+type Snake = [Point]
+
+-- Instantiate Initial Variables
+
+squareDim :: Float
+squareDim = 30
+
+startCoords :: Point
+startCoords = (50, 50)
+
 window :: Display
-window = InWindow "Snake" (200, 200) (200, 200)
+window = InWindow "Snake" (200, 200) (100, 100)
 
 background :: Color
-background = white
+background = black
 
 drawing :: Picture
 drawing = blank
 
--- game logic
-runGame :: 
+world :: Path
+world = [(-40, 50), (0, 0)]
 
-moveSnake :: Snake -> Direction -> Snake
- 
-growSnake :: Snake -> Snake
-growSnake = 
+convertWorld :: Path -> Picture
+convertWorld x = line x
 
-placeApple
+--dummyUpdate :: Game.Event -> world -> world
+--dummyUpdate event world = 
 
-updateScore :: Integer -> Integer
+--updateWorld :: Float -> Path -> Path
+--updateWorld num world = zip (map succ (fst (unzip world))) (snd (unzip world))
 
- 
+-- Initial Functions 
 
--- main function
+drawSquare :: Point -> Picture
+drawSquare upperLeft = color white (polygon [upperLeft, ((fst upperLeft) + squareDim, snd upperLeft), ((fst upperLeft) + squareDim, (snd upperLeft) + squareDim), (fst upperLeft, (snd upperLeft) + squareDim)])
+
+drawSnake :: Path -> [Picture]
+drawSnake snake | length snake == 1 = (drawSquare (head snake)) : []
+                | otherwise = (drawSquare (head snake)) : (drawSnake (tail snake))
+
+point :: Point
+point = (50,50)
+
+square :: Picture
+square = drawSquare point
+
+testSnake :: Path
+testSnake = [(0, 0), (40, 0), (80, 0)]
+
+snakePicture :: Picture
+snakePicture = Pictures (drawSnake testSnake)
+
 main :: IO ()
-main = display window background drawing
+main = display window background snakePicture
+
+-- play window background 1 world convertWorld dummyUpdate updateWorld
