@@ -1,44 +1,55 @@
 module Main where
 
 import Graphics.Gloss
-
 import Graphics.Gloss.Interface.Pure.Game as Game
 
-type Snake = [Point]
+type Snake = Path
+type GameState = (Snake, Point, Int, Direction)
+
+-- type Direction :: (Enum a) => a
+-- type Direction = NORTH | SOUTH | EAST | WEST
+
+data Direction = NORTH | SOUTH | EAST | WEST deriving (Enum, Eq)
 
 -- Instantiate Initial Variables
 
 squareDim :: Float
 squareDim = 30
 
-startCoords :: Point
-startCoords = (50, 50)
-
 window :: Display
-window = InWindow "Snake" (200, 200) (100, 100)
+window = InWindow "Snake" (500, 500) (100, 100)
 
 background :: Color
 background = black
 
-drawing :: Picture
-drawing = blank
+-- drawing :: Picture
+-- drawing = blank
 
-world :: Path
-world = [(-40, 50), (0, 0)]
 
-convertWorld :: Path -> Picture
-convertWorld x = line x
+-- convertWorld :: Path -> Picture
+-- convertWorld x = line x
 
---dummyUpdate :: Game.Event -> world -> world
---dummyUpdate event world = 
+handleKeyEvent :: Game.Event -> GameState -> GameState
+handleKeyEvent event game = game
 
---updateWorld :: Float -> Path -> Path
---updateWorld num world = zip (map succ (fst (unzip world))) (snd (unzip world))
+updateGame :: Float -> GameState -> GameState
+updateGame _ (snake, apple, score, direction) =
+    let newSnake = updateSnake snake direction
+    in (newSnake, apple, score, direction)
+    -- let newSnake = map (\(x,y) -> (x+40, y)) snake
 
--- Initial Functions 
+updateSnake :: Path -> Direction -> Path
+updateSnake snake direction = map (\(x,y) -> (x+deltaX, y+deltaY)) snake
+    where (deltaX, deltaY) | direction == NORTH = (0, 40) | direction == SOUTH = (0, -40) | direction == WEST = (-40, 0) | direction == EAST = (40, 0)
+
+-- Initial Functions
 
 drawSquare :: Point -> Picture
-drawSquare upperLeft = color white (polygon [upperLeft, ((fst upperLeft) + squareDim, snd upperLeft), ((fst upperLeft) + squareDim, (snd upperLeft) + squareDim), (fst upperLeft, (snd upperLeft) + squareDim)])
+drawSquare bottomLeft@(x, y) =
+    let topLeft = (x + squareDim, y)
+        topRight = (x + squareDim, y - squareDim)
+        bottomRight = (x, y - squareDim)
+    in color white (polygon [bottomLeft, topLeft, topRight, bottomRight])
 
 drawSnake :: Path -> [Picture]
 drawSnake snake | length snake == 1 = (drawSquare (head snake)) : []
@@ -47,16 +58,21 @@ drawSnake snake | length snake == 1 = (drawSquare (head snake)) : []
 point :: Point
 point = (50,50)
 
-square :: Picture
-square = drawSquare point
+-- square :: Picture
+-- square = drawSquare point
 
-testSnake :: Path
-testSnake = [(0, 0), (40, 0), (80, 0)]
+newSnake :: Path
+newSnake = [(0, 0), (40, 0), (80, 0)]
 
-snakePicture :: Picture
-snakePicture = Pictures (drawSnake testSnake)
+drawPicture :: GameState -> Picture
+drawPicture (snake, _, _, _) = Pictures (drawSnake snake)
 
 main :: IO ()
-main = display window background snakePicture
+main =
+    let newGame = (newSnake, (200,200), 0, NORTH)
+        keyFrame = 1
+    in play window background keyFrame newGame drawPicture handleKeyEvent updateGame
+
+-- display window background drawPicture
 
 -- play window background 1 world convertWorld dummyUpdate updateWorld
