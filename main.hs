@@ -55,7 +55,7 @@ generateApple snake
 	| randPoint `elem` snake = generateApple snake
 	| otherwise = randPoint
 	-- to DOOOO!!! figure out how randomR workss...
-	where randPoint = (fst (randomR (-20, 20) getStdGen), fst (randomR (-20, 20) getStdGen))
+	where randPoint = (fst (randomR (-20, 20) (mkStdGen 6)), fst (randomR (-20, 20) (mkStdGen 7)))
 
 --moveSnake :: Snake -> Direction -> Snake
 --moveSnake snake direction
@@ -118,7 +118,7 @@ handleKeyEvent _ game = game
 main :: IO ()
 main =
     let newGame = (newSnake, (-1,-1), 0, (0, 1))
-        keyFrame = 1
+        keyFrame = 4
     in play window background keyFrame newGame drawPicture handleKeyEvent updateGame
 
 -- display window background drawPicture
