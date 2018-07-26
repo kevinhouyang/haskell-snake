@@ -10,7 +10,8 @@ import Graphics.Gloss.Interface.Pure.Game as Game
 type Snake = Path
 type GameState = (Snake, Point, Int, Direction)
 
-data Direction = NORTH | SOUTH | EAST | WEST deriving (Enum, Eq)
+-- data Direction = NORTH | SOUTH | EAST | WEST deriving (Enum, Eq)
+type Direction = Point
 
 newSnake :: Snake
 newSnake = [(0, 0), (1, 0), (2, 0)]
@@ -56,37 +57,52 @@ generateApple snake
 	-- to DOOOO!!! figure out how randomR workss...
 	where randPoint = (fst (randomR (-20, 20) getStdGen), fst (randomR (-20, 20) getStdGen))
 
-moveSnake :: Snake -> Direction -> Snake
-moveSnake snake direction
-    | direction == NORTH = (x, y + 1): init snake
-    | direction == SOUTH = (x, y - 1): init snake
-    | direction == WEST = (x - 1, y): init snake
-    | direction == EAST = (x + 1, y): init snake
-    where (x,y) = head snake
+--moveSnake :: Snake -> Direction -> Snake
+--moveSnake snake direction
+--    | direction == NORTH = (x, y + 1): init snake
+--    | direction == SOUTH = (x, y - 1): init snake
+--    | direction == WEST = (x - 1, y): init snake
+--    | direction == EAST = (x + 1, y): init snake
+--    where (x,y) = head snake
 
+moveSnake :: Snake -> Direction -> Snake
+moveSnake snake (a, b) = (a + x, b + y) : init snake
+    where (x, y) = head snake
+
+--growSnake :: Snake -> Direction -> Snake
+--growSnake snake direction
+--	  | direction == NORTH = (x, y + 1): snake
+--    | direction == SOUTH = (x, y - 1): snake
+--    | direction == WEST = (x - 1, y): snake
+--    | direction == EAST = (x + 1, y): snake
+--	where (x,y) = head snake
+	
 growSnake :: Snake -> Direction -> Snake
-growSnake snake direction
-	| direction == NORTH = (x, y + 1): snake
-    | direction == SOUTH = (x, y - 1): snake
-    | direction == WEST = (x - 1, y): snake
-    | direction == EAST = (x + 1, y): snake
-	where (x,y) = head snake
+growSnake snake (a, b) = (a + x, b + y) : snake
+	where (x, y) = head snake
+	
+--updateGame :: Float -> GameState -> GameState
+--updateGame _ (snake, apple@(x, y), score, direction)
+-- snake eats the apple
+--	  | direction == NORTH && head snake == (x, y - 1) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
+--	  | direction == SOUTH && head snake == (x, y + 1) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
+--    | direction == WEST && head snake == (x + 1, y) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
+--    | direction == EAST && head snake == (x - 1, y) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
+--	  | otherwise = (moveSnake snake direction, apple, score, direction)
 	
 updateGame :: Float -> GameState -> GameState
-updateGame _ (snake, apple@(x, y), score, direction)
+updateGame _ (snake, apple, score, direction@(a, b))
 -- snake eats the apple
-	| direction == NORTH && head snake == (x, y - 1) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
-	| direction == SOUTH && head snake == (x, y + 1) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
-    | direction == WEST && head snake == (x + 1, y) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
-    | direction == EAST && head snake == (x - 1, y) = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
+	| (a + x, b + y) == apple = (growSnake snake direction, generateApple (growSnake snake direction), score, direction)
 	| otherwise = (moveSnake snake direction, apple, score, direction)
+	where (x, y) = head snake
 
 handleKeyEvent :: Game.Event -> GameState -> GameState
 handleKeyEvent (EventKey k ks _ _) (snake, point, int, direction)
-    | SpecialKey KeyUp <- k, Down <- ks = (snake, point, int, NORTH)
-    | SpecialKey KeyDown <- k, Down <- ks = (snake, point, int, SOUTH)
-    | SpecialKey KeyRight <- k, Down <- ks = (snake, point, int, EAST)
-    | SpecialKey KeyLeft <- k, Down <- ks = (snake, point, int, WEST)
+    | SpecialKey KeyUp <- k, Down <- ks = (snake, point, int, (0, 1))
+    | SpecialKey KeyDown <- k, Down <- ks = (snake, point, int, (0, -1))
+    | SpecialKey KeyRight <- k, Down <- ks = (snake, point, int, (1, 0))
+    | SpecialKey KeyLeft <- k, Down <- ks = (snake, point, int, (-1, 0))
     | otherwise = (snake, point, int, direction)
 handleKeyEvent _ game = game
 
@@ -101,7 +117,7 @@ handleKeyEvent _ game = game
 
 main :: IO ()
 main =
-    let newGame = (newSnake, (-1,-1), 0, NORTH)
+    let newGame = (newSnake, (-1,-1), 0, (0, 1))
         keyFrame = 1
     in play window background keyFrame newGame drawPicture handleKeyEvent updateGame
 
