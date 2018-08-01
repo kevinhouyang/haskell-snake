@@ -3,9 +3,8 @@ module Main where
 import System.Random as R
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game as Game
-import Data.Set as Set
+import qualified Data.Set as Set
 import Data.Fixed
-
 
 -- type/data declarations and constants --
 
@@ -32,7 +31,7 @@ background = black
 -- functions for rendering the picture --
 
 drawScore :: Int -> Picture
-drawScore score = color white $ text $ show score
+drawScore score = translate (-300) (180) $ color white $ text $ show score
 
 drawPicture :: GameState -> Picture
 drawPicture (snake, apple, score, _, _) =  Pictures $ (drawScore score) : (drawSquare red (fst apple)) : (drawSnake white snake)
@@ -42,7 +41,7 @@ drawSquare c bottomLeft@(x, y) =
     let topLeft = (x, y + 1)
         topRight = (x + 1, y + 1)
         bottomRight = (x + 1, y)
-        coords = (Prelude.map (\(x, y) -> ((x-10) * squareDim, (y-10) * squareDim)) [bottomLeft, topLeft, topRight, bottomRight])
+        coords = map (\(x, y) -> ((x-10) * squareDim, (y-10) * squareDim)) [bottomLeft, topLeft, topRight, bottomRight]
     in color c (polygon coords)
 
 drawSnake :: Color -> Snake -> [Picture]
@@ -55,18 +54,17 @@ changeColor (r, g, b, a) = makeColor r (g - 0.1) (b - 0.1) (a - 0.01)
 
 -- functions for handling game logic --
 
-newApple :: (Point, StdGen) -> Snake -> (Point, StdGen)
-newApple (apple, g) snake
-    | not ((fromIntegral x, fromIntegral y) `elem` snake) = ((fromIntegral x, fromIntegral y), g2)
-    | otherwise = newApple (apple, g2) snake
+moveApple :: (Point, StdGen) -> Snake -> (Point, StdGen)
+moveApple (apple, g) snake
+    | not (newApple `elem` snake) = (newApple , g2)
+    | otherwise = moveApple (apple, g2) snake
     where
-        (x, g1) = randomR (0, 20::Int) g
-        (y, g2) = randomR (0, 20::Int) g1
-    -- in ((fromIntegral x, fromIntegral y), g2)
+        (x, g1) = randomR (0, 19::Int) g
+        (y, g2) = randomR (0, 19::Int) g1
+        newApple = (fromIntegral x, fromIntegral y)
 
 checkLoss :: Snake -> Bool
-checkLoss snake = length snake /= length snake_set
-    where snake_set = Set.fromList snake
+checkLoss snake = length snake /= length (Set.fromList snake)
 
 moveSnake :: Snake -> Direction -> Snake
 moveSnake snake (a, b) = (mod' (a + x) 20, mod' (b + y) 20) : init snake
@@ -74,7 +72,7 @@ moveSnake snake (a, b) = (mod' (a + x) 20, mod' (b + y) 20) : init snake
 
 growSnake :: Snake -> Direction -> Snake
 growSnake snake (a, b) = (mod' (a + x) 20, mod' (b + y) 20) : snake
-	where (x, y) = head snake
+    where (x, y) = head snake
 
 handleKeyEvent :: Game.Event -> GameState -> GameState
 handleKeyEvent (EventKey k ks _ _) (snake, point, int, direction, curr_direction)
@@ -88,9 +86,9 @@ handleKeyEvent _ game = game
 updateGame :: Float -> GameState -> GameState
 updateGame _ (snake, apple, score, direction@(a, b), curr_direction)
     | checkLoss snake = (snake, apple, score, direction, curr_direction)
-	| (a + x, b + y) == fst apple = (growSnake snake direction, newApple apple snake, score + 1, direction, direction)
-	| otherwise = (moveSnake snake direction, apple, score, direction, direction)
-	where (x, y) = head snake
+    | (a + x, b + y) == fst apple = (growSnake snake direction, moveApple apple snake, succ score, direction, direction)
+    | otherwise = (moveSnake snake direction, apple, score, direction, direction)
+    where (x, y) = head snake
 
 -- run the game! --
 
