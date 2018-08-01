@@ -61,11 +61,7 @@ moveApple (apple, g) snake
     where
         (x, g1) = randomR (0, 19::Int) g
         (y, g2) = randomR (0, 19::Int) g1
-<<<<<<< HEAD
         newApple = (fromIntegral x, fromIntegral y)
-=======
-    -- in ((fromIntegral x, fromIntegral y), g2)
->>>>>>> 2cbc386fc84c4f9cea1c64eb6db3dc259b590eb8
 
 checkLoss :: Snake -> Bool
 checkLoss snake = length snake /= length (Set.fromList snake)
