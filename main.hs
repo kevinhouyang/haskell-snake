@@ -10,8 +10,9 @@ import Data.Fixed
 -- type/data declarations and constants --
 
 type Snake = Path
-type GameState = (Snake, Point, Int, Direction, Direction)
 type Direction = Point
+type Apple = (Point, StdGen)
+type GameState = (Snake, Apple, Int, Direction, Direction)
 
 newSnake :: Snake
 newSnake = [(0, 0), (1, 0), (2, 0)]
@@ -38,7 +39,7 @@ drawScore :: Int -> Picture
 drawScore score = color white (text $ show score)
 
 drawPicture :: GameState -> Picture
-drawPicture (snake, apple, score, _, _) =  Pictures  ((drawScore score): (drawSquare red apple) : (drawSnake white snake))
+drawPicture (snake, apple, score, _, _) =  Pictures  ((drawScore score): (drawSquare red (fst apple)) : (drawSnake white snake))
 
 drawSquare :: Color -> Point -> Picture
 drawSquare c bottomLeft@(x, y) =
@@ -59,30 +60,11 @@ changeColor (a, b, c, d) = new_c
 
 -- functions for handling game logic --
 
--- generateApple :: Snake -> Point
--- generateApple snake
-    -- | ((fromIntegral (fst randPoint)), (fromIntegral (snd randPoint))) `elem` snake = generateApple snake
-    -- | otherwise = ((fromIntegral (fst randPoint)), (fromIntegral (snd randPoint)))
-    -- where
-        -- randPoint :: (Integer, Integer)
-	    -- randPoint = (fst (randomR (-20, 20) (mkStdGen 0)), fst (randomR (-20, 20) (mkStdGen 0)))
-
--- generateApple :: Snake -> Point
--- generateApple snake
-    -- | let
-	--     randPoint :: (Integer, Integer)
-	--     randPoint = (fst (randomR (-20, 20) (mkStdGen 0)), fst (randomR (-20, 20) (mkStdGen 0)))
-	--   in (fromIntegral (fst randPoint), fromIntegral (snd randPoint)) `elem` snake = generateApple snake
-    -- | let
-	--     randPoint :: (Integer, Integer)
-	--     randPoint = (fst (randomR (-20, 20) (mkStdGen 0)), fst (randomR (-20, 20) (mkStdGen 0)))
-	--   in otherwise = (fromIntegral (fst randPoint), fromIntegral (snd randPoint))
-
--- generateApple :: Point
--- generateApple =
---     let x = randomR(-20, 20)
---         y = randomR(-20, 20)
---     in (x, y)
+newApple :: (Point, StdGen) -> (Point, StdGen)
+newApple (apple, g) =
+    let (x , g1) = randomR (0, 20::Int) g
+        (y, g2) = randomR (0, 20::Int) g1
+    in ((fromIntegral x, fromIntegral y), g2)
 
 checkLoss :: Snake -> Bool
 checkLoss snake = length snake /= length snake_set
@@ -108,7 +90,7 @@ handleKeyEvent _ game = game
 updateGame :: Float -> GameState -> GameState
 updateGame _ (snake, apple, score, direction@(a, b), curr_direction)
     | checkLoss snake = (snake, apple, score, direction, curr_direction)
-	| (a + x, b + y) == apple = (growSnake snake direction, apple, score + 1, direction, direction)
+	| (a + x, b + y) == fst apple = (growSnake snake direction, newApple apple, score + 1, direction, direction)
 	| otherwise = (moveSnake snake direction, apple, score, direction, direction)
 	where (x, y) = head snake
 
@@ -116,12 +98,6 @@ updateGame _ (snake, apple, score, direction@(a, b), curr_direction)
 
 main :: IO ()
 main =
-    let newGame = (newSnake, (0,0), 0, (0, 1), (0, 1))
+    let newGame = (newSnake, ((0,0), mkStdGen 0), 0, (0, 1), (0, 1))
         keyFrame = 5
     in play window background keyFrame newGame drawPicture handleKeyEvent updateGame
-	-- let
-	    -- randPoint :: (Int, Int)
-	    -- randPoint = (fst (randomR (-20, 20) (mkStdGen 0)), fst (randomR (-20, 20) (mkStdGen 0)))
-    -- in putStr (show randPoint)
-
-    -- display window background drawPicture
