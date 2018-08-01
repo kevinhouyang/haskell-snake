@@ -50,7 +50,7 @@ drawSnake c snake@(x:xs) = (drawSquare c x) : drawSnake new_c xs
     where new_c = changeColor (rgbaOfColor c)
 
 changeColor :: (Float, Float, Float, Float) -> Color
-changeColor (r, g, b, a) = makeColor r (g - 0.01) (b - 0.01) (a - 0.001)
+changeColor (r, g, b, a) = makeColor r (g - 0.1) (b - 0.1) (a - 0.01)
 
 -- functions for handling game logic --
 
