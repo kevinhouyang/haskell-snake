@@ -14,15 +14,11 @@ type Direction = Point
 type Apple = (Point, StdGen)
 type GameState = (Snake, Apple, Int, Direction, Direction)
 
-newSnake :: Snake
-newSnake = [(0, 0), (1, 0), (2, 0)]
-
 squareDim :: Float
 squareDim = 30
 
 windowDim :: Int
 windowDim = 600
-
 
 -- functions for setting the game window --
 
@@ -36,10 +32,10 @@ background = black
 -- functions for rendering the picture --
 
 drawScore :: Int -> Picture
-drawScore score = color white (text $ show score)
+drawScore score = color white $ text $ show score
 
 drawPicture :: GameState -> Picture
-drawPicture (snake, apple, score, _, _) =  Pictures  ((drawScore score): (drawSquare red (fst apple)) : (drawSnake white snake))
+drawPicture (snake, apple, score, _, _) =  Pictures $ (drawScore score) : (drawSquare red (fst apple)) : (drawSnake white snake)
 
 drawSquare :: Color -> Point -> Picture
 drawSquare c bottomLeft@(x, y) =
@@ -55,16 +51,18 @@ drawSnake c snake@(x:xs) = (drawSquare c x) : drawSnake new_c xs
     where new_c = changeColor (rgbaOfColor c)
 
 changeColor :: (Float, Float, Float, Float) -> Color
-changeColor (a, b, c, d) = new_c
-    where new_c = makeColor (a) (b - 0.1) (c - 0.1) (d)
+changeColor (r, g, b, a) = makeColor r (g - 0.1) (b - 0.1) (a - 0.01)
 
 -- functions for handling game logic --
 
-newApple :: (Point, StdGen) -> (Point, StdGen)
-newApple (apple, g) =
-    let (x , g1) = randomR (0, 20::Int) g
+newApple :: (Point, StdGen) -> Snake -> (Point, StdGen)
+newApple (apple, g) snake
+    | not ((fromIntegral x, fromIntegral y) `elem` snake) = ((fromIntegral x, fromIntegral y), g2)
+    | otherwise = newApple (apple, g2) snake
+    where
+        (x, g1) = randomR (0, 20::Int) g
         (y, g2) = randomR (0, 20::Int) g1
-    in ((fromIntegral x, fromIntegral y), g2)
+    -- in ((fromIntegral x, fromIntegral y), g2)
 
 checkLoss :: Snake -> Bool
 checkLoss snake = length snake /= length snake_set
@@ -90,7 +88,7 @@ handleKeyEvent _ game = game
 updateGame :: Float -> GameState -> GameState
 updateGame _ (snake, apple, score, direction@(a, b), curr_direction)
     | checkLoss snake = (snake, apple, score, direction, curr_direction)
-	| (a + x, b + y) == fst apple = (growSnake snake direction, newApple apple, score + 1, direction, direction)
+	| (a + x, b + y) == fst apple = (growSnake snake direction, newApple apple snake, score + 1, direction, direction)
 	| otherwise = (moveSnake snake direction, apple, score, direction, direction)
 	where (x, y) = head snake
 
@@ -98,6 +96,11 @@ updateGame _ (snake, apple, score, direction@(a, b), curr_direction)
 
 main :: IO ()
 main =
-    let newGame = (newSnake, ((0,0), mkStdGen 0), 0, (0, 1), (0, 1))
+    let seed = 0
+        startApple = ((10,10), mkStdGen seed)
+        startDirection = (0, 1)
+        startScore = 0
+        startSnake = [(0, 0), (1, 0), (2, 0)]
+        newGame = (startSnake, startApple, startScore, startDirection, startDirection)
         keyFrame = 5
     in play window background keyFrame newGame drawPicture handleKeyEvent updateGame
