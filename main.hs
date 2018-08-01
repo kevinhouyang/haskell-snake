@@ -50,7 +50,7 @@ drawSnake c snake@(x:xs) = (drawSquare c x) : drawSnake new_c xs
     where new_c = changeColor (rgbaOfColor c)
 
 changeColor :: (Float, Float, Float, Float) -> Color
-changeColor (r, g, b, a) = makeColor r (g - 0.1) (b - 0.1) (a - 0.01)
+changeColor (r, g, b, a) = makeColor r (g - 0.01) (b - 0.01) (a - 0.001)
 
 -- functions for handling game logic --
 
@@ -61,7 +61,11 @@ moveApple (apple, g) snake
     where
         (x, g1) = randomR (0, 19::Int) g
         (y, g2) = randomR (0, 19::Int) g1
+<<<<<<< HEAD
         newApple = (fromIntegral x, fromIntegral y)
+=======
+    -- in ((fromIntegral x, fromIntegral y), g2)
+>>>>>>> 2cbc386fc84c4f9cea1c64eb6db3dc259b590eb8
 
 checkLoss :: Snake -> Bool
 checkLoss snake = length snake /= length (Set.fromList snake)
