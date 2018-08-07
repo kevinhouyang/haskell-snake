@@ -5,6 +5,8 @@ This is Snake implemented in Haskell.
 
 We mainly built this as an exercise in learning functional programming. It uses the Gloss package for its graphics and game interfaces.
 
+To run: `ghc -o main main.hs && ./main`
+
 Our snake wraps around the screen, so you do not need to worry about running into walls. The score is incremented everytime an apple is eaten. The game is over whenever the snake tries to eat itself.
 
 Building this game, we scratched the surface of several interesting topics:
